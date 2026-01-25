@@ -37,4 +37,5 @@ export LLVM_REPOSITORY LLVM_VERSION CORES TOOLCHAIN_ARCHS
 # Stage 2: Windows-hosted toolchain (.exe, unprefixed tools) bootstrapped from stage 1
 "./build-cross-tools.sh" "$NATIVE_PREFIX" "$CROSS_PREFIX" "$CROSS_ARCH" \
   --disable-lldb \
+  --with-clang \
   --thinlto 
