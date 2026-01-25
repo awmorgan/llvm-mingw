@@ -21,6 +21,7 @@ CORES=16 \
 TOOLCHAIN_ARCHS="i686 x86_64" \
 "./build-all.sh" "./install/llvm-mingw" \
   --with-default-msvcrt=ucrt \
+  --host=x86_64-w64-mingw32 \
   --host-clang=clang \
   --with-clang \
   --thinlto 
