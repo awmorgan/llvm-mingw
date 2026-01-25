@@ -34,9 +34,6 @@ while [ $# -gt 0 ]; do
     --disable-clang-tools-extra)
         LLVM_ARGS="$LLVM_ARGS $1"
         ;;
-    --with-clang)
-        LLVM_ARGS="$LLVM_ARGS $1"
-        ;;
     --no-llvm-tool-reuse)
         LLVM_ARGS="$LLVM_ARGS $1"
         ;;

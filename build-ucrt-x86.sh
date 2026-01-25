@@ -39,5 +39,4 @@ CROSS_ARCH="x86_64"
 CROSS_PREFIX="$(pwd)/install/llvm-mingw-windows"
 "./build-cross-tools.sh" "$NATIVE_PREFIX" "$CROSS_PREFIX" "$CROSS_ARCH" \
   --disable-lldb \
-  --with-clang \
-  --thinlto
+  --thinlto 
