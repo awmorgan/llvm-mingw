@@ -6,11 +6,21 @@ set -e
 
 # LLVM_REPOSITORY=https://github.com/swiftlang/llvm-project.git
 # LLVM_VERSION=stable/21.x
-REPO_ROOT=$(cd "$(dirname "$0")" && pwd)
-DEST="$REPO_ROOT/install/llvm-mingw"
+#REPO_ROOT=$(cd "$(dirname "$0")" && pwd)
+# DEST="$REPO_ROOT/install/llvm-mingw"
 
+# TOOLCHAIN_ARCHS="i686 x86_64" \
+# "$REPO_ROOT/build-all.sh" "$DEST" \
+#   --with-default-msvcrt=ucrt \
+#   --disable-lldb \
+#   --disable-lldb-mi \
+#   --disable-clang-tools-extra
+
+# DEST="./install/llvm-mingw"
+
+CORES=16 \
 TOOLCHAIN_ARCHS="i686 x86_64" \
-"$REPO_ROOT/build-all.sh" "$DEST" \
+"./build-all.sh" "./install/llvm-mingw" \
   --with-default-msvcrt=ucrt \
   --disable-lldb \
   --disable-lldb-mi \
