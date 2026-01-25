@@ -15,8 +15,8 @@ done
 # Redirect all output to both console and log file
 exec > >(tee "$LOG_DIR/build-ucrt-x86.log") 2>&1
 
-NATIVE_PREFIX="./install/llvm-mingw-native"
-CROSS_PREFIX="./install/llvm-mingw-windows"
+NATIVE_PREFIX="$(pwd)/install/llvm-mingw-native"
+CROSS_PREFIX="$(pwd)/install/llvm-mingw-windows"
 CROSS_ARCH="x86_64"
 TOOLCHAIN_ARCHS="i686 x86_64"
 DEFAULT_MSVCRT=ucrt
@@ -27,15 +27,15 @@ LLVM_VERSION=stable/21.x
 CORES=16
 export LLVM_REPOSITORY LLVM_VERSION CORES TOOLCHAIN_ARCHS
 
-# Stage 1: Linux-hosted toolchain that targets Windows (provides runtimes used by stage 2)
+# Stage 1: Linux-hosted toolchain that targets Windows
 "./build-all.sh" "$NATIVE_PREFIX" \
   --with-default-msvcrt=$DEFAULT_MSVCRT \
   --host-clang=clang \
   --with-clang \
   --thinlto
 
-# Stage 2: Windows-hosted toolchain (.exe, unprefixed tools) bootstrapped from stage 1
+# Stage 2: Windows-hosted toolchain (.exe) bootstrapped from stage 1
 "./build-cross-tools.sh" "$NATIVE_PREFIX" "$CROSS_PREFIX" "$CROSS_ARCH" \
   --disable-lldb \
   --with-clang \
-  --thinlto 
+  --thinlto
