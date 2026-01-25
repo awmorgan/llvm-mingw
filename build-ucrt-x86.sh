@@ -15,19 +15,17 @@ done
 # Redirect all output to both console and log file
 exec > >(tee "$LOG_DIR/build-ucrt-x86.log") 2>&1
 
-NATIVE_PREFIX="$(pwd)/install/llvm-mingw-native"
-CROSS_PREFIX="$(pwd)/install/llvm-mingw-windows"
-CROSS_ARCH="x86_64"
-TOOLCHAIN_ARCHS="i686 x86_64"
-DEFAULT_MSVCRT=ucrt
-
 # Shared build settings for both stages
-LLVM_REPOSITORY=https://github.com/swiftlang/llvm-project.git
-LLVM_VERSION=stable/21.x
-CORES=16
-export LLVM_REPOSITORY LLVM_VERSION CORES TOOLCHAIN_ARCHS
+export TOOLCHAIN_ARCHS="i686 x86_64"
+export LLVM_REPOSITORY=https://github.com/swiftlang/llvm-project.git
+export LLVM_VERSION=stable/21.x
+export CORES=16
+# Force Windows 10 target (0x0A00) so MinGW headers expose FileRenameInfoEx
+export LLVM_CMAKEFLAGS="-DCMAKE_C_FLAGS='-D_WIN32_WINNT=0x0A00' -DCMAKE_CXX_FLAGS='-D_WIN32_WINNT=0x0A00'"
 
 # Stage 1: Linux-hosted toolchain that targets Windows
+NATIVE_PREFIX="$(pwd)/install/llvm-mingw-native"
+DEFAULT_MSVCRT=ucrt
 "./build-all.sh" "$NATIVE_PREFIX" \
   --with-default-msvcrt=$DEFAULT_MSVCRT \
   --host-clang=clang \
@@ -35,6 +33,8 @@ export LLVM_REPOSITORY LLVM_VERSION CORES TOOLCHAIN_ARCHS
   --thinlto
 
 # Stage 2: Windows-hosted toolchain (.exe) bootstrapped from stage 1
+CROSS_ARCH="x86_64"
+CROSS_PREFIX="$(pwd)/install/llvm-mingw-windows"
 "./build-cross-tools.sh" "$NATIVE_PREFIX" "$CROSS_PREFIX" "$CROSS_ARCH" \
   --disable-lldb \
   --with-clang \
