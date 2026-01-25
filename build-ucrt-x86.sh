@@ -7,9 +7,6 @@ set -e
 REPO_ROOT=$(cd "$(dirname "$0")" && pwd)
 DEST="$REPO_ROOT/install/llvm-mingw"
 
-# Avoid inherited PREFIX/PREFIX_PGO from environment interfering with parsing in build-all.sh.
-unset PREFIX PREFIX_PGO
-
 TOOLCHAIN_ARCHS="i686 x86_64" \
 "$REPO_ROOT/build-all.sh" "$DEST" \
   --with-default-msvcrt=ucrt \
