@@ -16,8 +16,9 @@
 
 set -e
 
-: ${LLVM_REPOSITORY:=https://github.com/llvm/llvm-project.git}
-: ${LLVM_VERSION:=llvmorg-22.1.0-rc1}
+: ${LLVM_REPOSITORY:=https://github.com/swiftlang/llvm-project.git}
+# Track the tip of the stable/21.x branch by default; this can be overridden with LLVM_VERSION env var.
+: ${LLVM_VERSION:=stable/21.x}
 ASSERTS=OFF
 unset HOST
 BUILDDIR="build"
