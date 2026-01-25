@@ -4,6 +4,8 @@ set -e
 # Build llvm-mingw for UCRT i686/x86_64 only, without lldb/lldb-mi/clang-tools-extra.
 # Installs into ./install/llvm-mingw relative to the repo root.
 
+# LLVM_REPOSITORY=https://github.com/swiftlang/llvm-project.git
+# LLVM_VERSION=stable/21.x
 REPO_ROOT=$(cd "$(dirname "$0")" && pwd)
 DEST="$REPO_ROOT/install/llvm-mingw"
 
