@@ -159,7 +159,7 @@ fi
 [ -z "$CHECKOUT_ONLY" ] || exit 0
 
 echo "Patching /bigobj to -Wa,-mbig-obj for MinGW build..."
-find llvm-project -name "CMakeLists.txt" -o -name "*.cmake" | xargs sed -i 's|/bigobj|-Wa,-mbig-obj|g'
+find llvm-project \( -name "CMakeLists.txt" -o -name "*.cmake" \) -type f -print0 | xargs -0 sed -i 's|/bigobj|-Wa,-mbig-obj|g'
 
 if [ -n "$HOST" ]; then
     case $HOST in
