@@ -26,6 +26,7 @@ NATIVE_PREFIX="$(pwd)/install/llvm-mingw-native"
 "./build-all.sh" "$NATIVE_PREFIX" \
   --with-default-msvcrt=ucrt \
   --with-clang \
+  --disable-lldb \
   --thinlto
 
 # Stage 2: Windows-hosted toolchain (.exe) bootstrapped from stage 1
