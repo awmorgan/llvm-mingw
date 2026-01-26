@@ -16,7 +16,7 @@ done
 exec > >(tee "$LOG_DIR/build-ucrt-x86.log") 2>&1
 
 # Shared build settings for both stages
-export TOOLCHAIN_ARCHS="i686 x86_64"
+export TOOLCHAIN_ARCHS="x86_64"
 export LLVM_REPOSITORY=https://github.com/swiftlang/llvm-project.git
 export LLVM_VERSION=stable/21.x
 export CORES=16
