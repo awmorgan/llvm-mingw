@@ -16,6 +16,7 @@ cd "$ROOT"
 
 # Build settings
 export LLVM_REPOSITORY LLVM_VERSION
+export LLVM_CMAKEFLAGS="-DCLANG_INCLUDE_TESTS=OFF"
 export CORES="${CORES:-8}"
 
 echo "=== Installing build dependencies ==="
@@ -56,15 +57,25 @@ if [[ -d llvm-project ]]; then
         echo "Move the existing checkout or change its remote."
         exit 1
     fi
-
-    if [[ -n "$(git -C llvm-project status --porcelain)" ]]; then
-        echo "ERROR: llvm-project has uncommitted changes"
-        exit 1
-    fi
 fi
 
 # Forces build-llvm.sh to select the requested commit.
 export SYNC=1
+
+echo "=== Patching Apple IndexStore exports ==="
+
+EXPORTS="$ROOT/llvm-project/clang/tools/IndexStore/IndexStore.exports"
+
+# Fetch/check out the requested LLVM commit before patching.
+(
+    cd "$ROOT"
+    CHECKOUT_ONLY=1 SYNC=1 ./build-llvm.sh
+)
+
+# Remove the ten unavailable symbols.
+sed -i -E \
+    '/^indexstore_(store_units_apply|store_set_unit_event_handler|occurrence_relations_apply|record_reader_search_symbols|record_reader_symbols_apply|record_reader_occurrences_apply|record_reader_occurrences_in_line_range_apply|record_reader_occurrences_of_symbols_apply|unit_reader_dependencies_apply|unit_reader_includes_apply)$/d' \
+    "$EXPORTS"
 
 echo "=== Building Linux-hosted toolchain ==="
 ./build-all.sh "$NATIVE" --disable-lldb
