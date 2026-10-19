@@ -67,13 +67,14 @@ fi
 export SYNC=1
 
 echo "=== Building Linux-hosted toolchain ==="
-./build-all.sh "$NATIVE"
+./build-all.sh "$NATIVE" --disable-lldb
 
 echo "=== Building Windows-native toolchain ==="
 ./build-cross-tools.sh \
     "$NATIVE" \
     "$WINDOWS" \
-    x86_64
+    x86_64 \
+    --disable-lldb
 
 echo "=== Verifying Windows compiler ==="
 
