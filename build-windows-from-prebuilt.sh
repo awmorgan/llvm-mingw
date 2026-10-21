@@ -28,7 +28,7 @@ PREBUILT_ARCH=x86_64 # Architecture of Linux machine running the prebuilt compil
 LLVM_SOURCE_DIR=$HOME/llvm-project
 WINDOWS_ARCH=x86_64 # Architecture of the Windows-hosted tools to build.
 WINDOWS_PREFIX=$ROOT/install/llvm-mingw-windows-$WINDOWS_ARCH
-CORES=8
+CORES=${CORES:-8}
 
 if [[ $(uname -s) != Linux || $(uname -m) != x86_64 ]]; then
     echo 'This script requires x86_64 Linux (including WSL).' >&2
