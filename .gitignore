@@ -5,4 +5,7 @@
 /libffi
 /cpython*
 /python-native
+/prebuilt
+/install
 /toolchain
+*.log
