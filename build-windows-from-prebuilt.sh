@@ -3,17 +3,12 @@
 # Usage:
 #   ./build-windows-from-prebuilt.sh [extra build-cross-tools.sh options...]
 #
-# Environment overrides (defaults):
-#   LLVM_SOURCE_DIR  Local LLVM monorepo ($HOME/llvm-project).
-#   WINDOWS_ARCH     Architecture running the Windows tools (x86_64).
-#                    Supported: i686, x86_64, aarch64, armv7.
-#   WINDOWS_PREFIX   Output directory (<script-dir>/install/llvm-mingw-windows-$WINDOWS_ARCH).
-#   CORES            Parallel build jobs (8).
+# Customize the settings in the block below. To use another release, update
+# PREBUILT_RELEASE and PREBUILT_SHA256 together. Get the SHA256 from that
+# release's matching Linux archive asset.
 #
 # Examples:
-#   CORES=4 ./build-windows-from-prebuilt.sh
 #   ./build-windows-from-prebuilt.sh --disable-lldb --disable-lldb-mi
-#   WINDOWS_ARCH=aarch64 ./build-windows-from-prebuilt.sh
 #
 # Uses the local LLVM revision without fetching or checking out LLVM sources.
 # Creates build files inside that checkout and may download other components.
@@ -22,10 +17,18 @@ set -euo pipefail
 
 cd -- "$(dirname -- "${BASH_SOURCE[0]}")"
 ROOT=$PWD
-LLVM_SOURCE_DIR=${LLVM_SOURCE_DIR:-$HOME/llvm-project}
-WINDOWS_ARCH=${WINDOWS_ARCH:-x86_64}
-WINDOWS_PREFIX=${WINDOWS_PREFIX:-$ROOT/install/llvm-mingw-windows-$WINDOWS_ARCH}
-CORES=${CORES:-8}
+
+# Configuration: change these values for a different release or build.
+PREBUILT_RELEASE=20261020
+PREBUILT_CRT=ucrt
+PREBUILT_PLATFORM=ubuntu-22.04
+PREBUILT_ARCH=x86_64 # Architecture of Linux machine running the prebuilt compiler.
+PREBUILT_SHA256=55064b60b991a1e1e8090b8c2f84e82b22cfe5903d12c159d65064cf5e8ae335
+
+LLVM_SOURCE_DIR=$HOME/llvm-project
+WINDOWS_ARCH=x86_64 # Architecture of the Windows-hosted tools to build.
+WINDOWS_PREFIX=$ROOT/install/llvm-mingw-windows-$WINDOWS_ARCH
+CORES=8
 
 if [[ $(uname -s) != Linux || $(uname -m) != x86_64 ]]; then
     echo 'This script requires x86_64 Linux (including WSL).' >&2
@@ -37,6 +40,10 @@ case "$WINDOWS_ARCH" in
 esac
 if [[ ! $CORES =~ ^[1-9][0-9]*$ ]]; then
     echo 'CORES must be a positive integer.' >&2
+    exit 1
+fi
+if [[ ! $PREBUILT_SHA256 =~ ^[[:xdigit:]]{64}$ ]]; then
+    echo 'PREBUILT_SHA256 must be the 64-digit SHA256 for the selected archive.' >&2
     exit 1
 fi
 
@@ -75,19 +82,18 @@ fi
 unset SYNC CHECKOUT CHECKOUT_ONLY
 export CORES
 
-PACKAGE=llvm-mingw-20261020-ucrt-ubuntu-22.04-x86_64
+PACKAGE="llvm-mingw-$PREBUILT_RELEASE-$PREBUILT_CRT-$PREBUILT_PLATFORM-$PREBUILT_ARCH"
 ARCHIVE="$ROOT/prebuilt/$PACKAGE.tar.xz"
 NATIVE="$ROOT/prebuilt/$PACKAGE"
-SHA256=55064b60b991a1e1e8090b8c2f84e82b22cfe5903d12c159d65064cf5e8ae335
 mkdir -p "$ROOT/prebuilt"
 if [[ ! -f "$ARCHIVE" ]]; then
     curl -fL --retry 3 \
         -o "$ARCHIVE.part" \
-        "https://github.com/mstorsjo/llvm-mingw/releases/download/20261020/$PACKAGE.tar.xz"
-    printf '%s  %s\n' "$SHA256" "$ARCHIVE.part" | sha256sum -c -
+        "https://github.com/mstorsjo/llvm-mingw/releases/download/$PREBUILT_RELEASE/$PACKAGE.tar.xz"
+    printf '%s  %s\n' "$PREBUILT_SHA256" "$ARCHIVE.part" | sha256sum -c -
     mv -- "$ARCHIVE.part" "$ARCHIVE"
 fi
-printf '%s  %s\n' "$SHA256" "$ARCHIVE" | sha256sum -c -
+printf '%s  %s\n' "$PREBUILT_SHA256" "$ARCHIVE" | sha256sum -c -
 if [[ ! -f "$NATIVE/.custom-build-extracted" ]]; then
     tar -xJf "$ARCHIVE" -C "$ROOT/prebuilt"
     touch "$NATIVE/.custom-build-extracted"
