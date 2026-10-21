@@ -47,21 +47,43 @@ if [[ ! $PREBUILT_SHA256 =~ ^[[:xdigit:]]{64}$ ]]; then
     exit 1
 fi
 
-missing=0
-for dep in curl sha256sum tar xz git cmake ninja make gcc g++ python3 \
-           autoconf automake libtoolize pkg-config gettext autopoint bzip2 unzip file; do
-    if ! command -v "$dep" >/dev/null; then
-        echo "Missing dependency: $dep" >&2
-        missing=1
+check_dependencies() {
+    local missing=0
+    for dep in curl sha256sum tar xz git cmake ninja make gcc g++ python3 \
+               autoconf automake libtoolize pkg-config gettext autopoint bzip2 unzip file; do
+        if ! command -v "$dep" >/dev/null; then
+            echo "Missing dependency: $dep" >&2
+            missing=1
+        fi
+    done
+    return "$missing"
+}
+
+if ! check_dependencies; then
+    if ! command -v apt-get >/dev/null; then
+        echo 'Automatic dependency installation requires apt-get (Ubuntu/Debian).' >&2
+        exit 1
     fi
-done
-if (( missing )); then
-    cat >&2 <<'EOF'
-On Ubuntu, install dependencies with:
-  sudo apt-get update
-  sudo apt-get install -y build-essential cmake ninja-build git curl ca-certificates xz-utils bzip2 unzip file python3 autoconf automake libtool libltdl-dev pkg-config gettext autopoint
-EOF
-    exit 1
+
+    if (( EUID == 0 )); then
+        SUDO=()
+    elif command -v sudo >/dev/null; then
+        SUDO=(sudo)
+    else
+        echo 'Missing dependencies; install them as root or make sudo available.' >&2
+        exit 1
+    fi
+
+    echo 'Installing build dependencies with apt-get...'
+    "${SUDO[@]}" apt-get update
+    "${SUDO[@]}" apt-get install -y build-essential cmake ninja-build git curl \
+        ca-certificates xz-utils bzip2 unzip file python3 autoconf automake \
+        libtool libltdl-dev pkg-config gettext autopoint
+
+    if ! check_dependencies; then
+        echo 'Dependency installation completed, but required commands are still missing.' >&2
+        exit 1
+    fi
 fi
 
 if [[ ! -f "$LLVM_SOURCE_DIR/llvm/CMakeLists.txt" || ! -d "$LLVM_SOURCE_DIR/clang" ]]; then
