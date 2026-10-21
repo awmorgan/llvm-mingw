@@ -20,10 +20,10 @@ ROOT=$PWD
 
 # Configuration: change these values for a different release or build.
 PREBUILT_RELEASE=20261020
+PREBUILT_SHA256=55064b60b991a1e1e8090b8c2f84e82b22cfe5903d12c159d65064cf5e8ae335
 PREBUILT_CRT=ucrt
 PREBUILT_PLATFORM=ubuntu-22.04
 PREBUILT_ARCH=x86_64 # Architecture of Linux machine running the prebuilt compiler.
-PREBUILT_SHA256=55064b60b991a1e1e8090b8c2f84e82b22cfe5903d12c159d65064cf5e8ae335
 
 LLVM_SOURCE_DIR=$HOME/llvm-project
 WINDOWS_ARCH=x86_64 # Architecture of the Windows-hosted tools to build.
