@@ -13,12 +13,14 @@
 # Uses the local LLVM revision without fetching or checking out LLVM sources.
 # Creates build files inside that checkout and may download other components.
 # Copies headers and runtime libraries from the pinned prebuilt release.
+# Creates a Windows-hosted release ZIP in the repository root when the build completes.
 set -euo pipefail
 
 cd -- "$(dirname -- "${BASH_SOURCE[0]}")"
 ROOT=$PWD
 
-# Configuration: change these values for a different release or build.
+# Configuration: change these values to customize the inputs, output package,
+# or build. PREBUILT_RELEASE and PREBUILT_SHA256 must refer to the same release.
 PREBUILT_RELEASE=20261020
 PREBUILT_SHA256=55064b60b991a1e1e8090b8c2f84e82b22cfe5903d12c159d65064cf5e8ae335
 PREBUILT_CRT=ucrt
@@ -27,8 +29,11 @@ PREBUILT_ARCH=x86_64 # Architecture of Linux machine running the prebuilt compil
 
 LLVM_SOURCE_DIR=$HOME/llvm-project
 WINDOWS_ARCH=x86_64 # Architecture of the Windows-hosted tools to build.
-WINDOWS_PREFIX=$ROOT/install/llvm-mingw-windows-$WINDOWS_ARCH
+PACKAGE_TAG=20261021 # Version label used in the output ZIP filename; defaults to the prebuilt release.
+PACKAGE_NAME=llvm-mingw-$PACKAGE_TAG-$PREBUILT_CRT-$WINDOWS_ARCH
+WINDOWS_PREFIX=$ROOT/install/$PACKAGE_NAME
 CORES=${CORES:-8}
+ZIP_FILE=$ROOT/$PACKAGE_NAME.zip
 
 if [[ $(uname -s) != Linux || $(uname -m) != x86_64 ]]; then
     echo 'This script requires x86_64 Linux (including WSL).' >&2
@@ -50,7 +55,7 @@ fi
 check_dependencies() {
     local missing=0
     for dep in curl sha256sum tar xz git cmake ninja make gcc g++ python3 \
-               autoconf automake libtoolize pkg-config gettext autopoint bzip2 unzip file; do
+               autoconf automake libtoolize pkg-config gettext autopoint bzip2 unzip file zip; do
         if ! command -v "$dep" >/dev/null; then
             echo "Missing dependency: $dep" >&2
             missing=1
@@ -77,7 +82,7 @@ if ! check_dependencies; then
     echo 'Installing build dependencies with apt-get...'
     "${SUDO[@]}" apt-get update
     "${SUDO[@]}" apt-get install -y build-essential cmake ninja-build git curl \
-        ca-certificates xz-utils bzip2 unzip file python3 autoconf automake \
+        ca-certificates xz-utils bzip2 unzip file zip python3 autoconf automake \
         libtool libltdl-dev pkg-config gettext autopoint
 
     if ! check_dependencies; then
@@ -139,4 +144,8 @@ echo 'Build files will be created inside your local LLVM checkout; other compone
 ./build-cross-tools.sh "$NATIVE" "$WINDOWS_PREFIX" "$WINDOWS_ARCH" \
     --no-llvm-tool-reuse "$@"
 
-printf '\nFinished. Copy this entire directory to Windows:\n%s\n' "$WINDOWS_PREFIX"
+rm -f -- "$ZIP_FILE"
+(cd -- "$ROOT/install" && zip -9rq "$ZIP_FILE" "$PACKAGE_NAME")
+
+printf '\nFinished. Windows toolchain directory:\n%s\nRelease ZIP:\n%s\n' \
+    "$WINDOWS_PREFIX" "$ZIP_FILE"
