@@ -147,6 +147,7 @@ printf 'LLVM source: %s\nWindows output: %s\nParallel jobs: %s\n' \
     "$LLVM_SOURCE_DIR" "$WINDOWS_PREFIX" "$CORES"
 echo 'Windows tools will be rebuilt; headers and runtime libraries come from the prebuilt release.'
 echo 'Build files will be created inside your local LLVM checkout; other component sources may be downloaded.'
+export LLVM_CMAKEFLAGS="${LLVM_CMAKEFLAGS:+$LLVM_CMAKEFLAGS }-DCMAKE_CXX_FLAGS=-D_WIN32_WINNT=0x0A00"
 if (( BUILD_LLDB )); then
     LLVM_CMAKEFLAGS="${LLVM_CMAKEFLAGS:+$LLVM_CMAKEFLAGS }-DLLDB_ENABLE_SWIFT_SUPPORT=OFF" \
         ./build-cross-tools.sh "$NATIVE" "$WINDOWS_PREFIX" "$WINDOWS_ARCH" \
