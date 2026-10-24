@@ -28,6 +28,7 @@ PREBUILT_PLATFORM=ubuntu-22.04
 PREBUILT_ARCH=x86_64 # Architecture of Linux machine running the prebuilt compiler.
 
 LLVM_SOURCE_DIR=$HOME/llvm-project
+SWIFT_SOURCE_DIR=${SWIFT_SOURCE_DIR:-$HOME/swift}
 WINDOWS_ARCH=x86_64 # Architecture of the Windows-hosted tools to build.
 PACKAGE_TAG=20261021 # Version label used in the output ZIP filename; defaults to the prebuilt release.
 PACKAGE_NAME=llvm-mingw-$PACKAGE_TAG-$PREBUILT_CRT-$WINDOWS_ARCH
@@ -96,6 +97,19 @@ if [[ ! -f "$LLVM_SOURCE_DIR/llvm/CMakeLists.txt" || ! -d "$LLVM_SOURCE_DIR/clan
     exit 1
 fi
 LLVM_SOURCE_DIR=$(cd -- "$LLVM_SOURCE_DIR" && pwd -P)
+BUILD_LLDB=1
+for arg in "$@"; do
+    if [[ $arg == --disable-lldb ]]; then
+        BUILD_LLDB=0
+    fi
+done
+if (( BUILD_LLDB )); then
+    if [[ ! -f "$SWIFT_SOURCE_DIR/cmake/modules/SwiftAddCustomCommandTarget.cmake" ]]; then
+        echo "SWIFT_SOURCE_DIR must point to the paired Swift checkout: $SWIFT_SOURCE_DIR" >&2
+        exit 1
+    fi
+    SWIFT_SOURCE_DIR=$(cd -- "$SWIFT_SOURCE_DIR" && pwd -P)
+fi
 if [[ -e llvm-project || -L llvm-project ]]; then
     if [[ ! -d llvm-project ]] || [[ $(cd llvm-project && pwd -P) != "$LLVM_SOURCE_DIR" ]]; then
         echo "Existing $ROOT/llvm-project does not resolve to $LLVM_SOURCE_DIR; leaving it untouched." >&2
@@ -141,8 +155,14 @@ printf 'LLVM source: %s\nWindows output: %s\nParallel jobs: %s\n' \
     "$LLVM_SOURCE_DIR" "$WINDOWS_PREFIX" "$CORES"
 echo 'Windows tools will be rebuilt; headers and runtime libraries come from the prebuilt release.'
 echo 'Build files will be created inside your local LLVM checkout; other component sources may be downloaded.'
-./build-cross-tools.sh "$NATIVE" "$WINDOWS_PREFIX" "$WINDOWS_ARCH" \
-    --no-llvm-tool-reuse "$@"
+if (( BUILD_LLDB )); then
+    CMAKEFLAGS="${CMAKEFLAGS:+$CMAKEFLAGS }-DLLVM_EXTERNAL_SWIFT_SOURCE_DIR=$SWIFT_SOURCE_DIR" \
+        ./build-cross-tools.sh "$NATIVE" "$WINDOWS_PREFIX" "$WINDOWS_ARCH" \
+        --no-llvm-tool-reuse "$@"
+else
+    ./build-cross-tools.sh "$NATIVE" "$WINDOWS_PREFIX" "$WINDOWS_ARCH" \
+        --no-llvm-tool-reuse "$@"
+fi
 
 rm -f -- "$ZIP_FILE"
 (cd -- "$ROOT/install" && zip -9rq "$ZIP_FILE" "$PACKAGE_NAME")
