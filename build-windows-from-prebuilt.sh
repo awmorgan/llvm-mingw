@@ -28,7 +28,6 @@ PREBUILT_PLATFORM=ubuntu-22.04
 PREBUILT_ARCH=x86_64 # Architecture of Linux machine running the prebuilt compiler.
 
 LLVM_SOURCE_DIR=$HOME/llvm-project
-SWIFT_SOURCE_DIR=${SWIFT_SOURCE_DIR:-$HOME/swift}
 WINDOWS_ARCH=x86_64 # Architecture of the Windows-hosted tools to build.
 PACKAGE_TAG=20261021 # Version label used in the output ZIP filename; defaults to the prebuilt release.
 PACKAGE_NAME=llvm-mingw-$PACKAGE_TAG-$PREBUILT_CRT-$WINDOWS_ARCH
@@ -103,13 +102,6 @@ for arg in "$@"; do
         BUILD_LLDB=0
     fi
 done
-if (( BUILD_LLDB )); then
-    if [[ ! -f "$SWIFT_SOURCE_DIR/cmake/modules/SwiftAddCustomCommandTarget.cmake" ]]; then
-        echo "SWIFT_SOURCE_DIR must point to the paired Swift checkout: $SWIFT_SOURCE_DIR" >&2
-        exit 1
-    fi
-    SWIFT_SOURCE_DIR=$(cd -- "$SWIFT_SOURCE_DIR" && pwd -P)
-fi
 if [[ -e llvm-project || -L llvm-project ]]; then
     if [[ ! -d llvm-project ]] || [[ $(cd llvm-project && pwd -P) != "$LLVM_SOURCE_DIR" ]]; then
         echo "Existing $ROOT/llvm-project does not resolve to $LLVM_SOURCE_DIR; leaving it untouched." >&2
@@ -156,7 +148,7 @@ printf 'LLVM source: %s\nWindows output: %s\nParallel jobs: %s\n' \
 echo 'Windows tools will be rebuilt; headers and runtime libraries come from the prebuilt release.'
 echo 'Build files will be created inside your local LLVM checkout; other component sources may be downloaded.'
 if (( BUILD_LLDB )); then
-    CMAKEFLAGS="${CMAKEFLAGS:+$CMAKEFLAGS }-DLLVM_EXTERNAL_SWIFT_SOURCE_DIR=$SWIFT_SOURCE_DIR" \
+    LLVM_CMAKEFLAGS="${LLVM_CMAKEFLAGS:+$LLVM_CMAKEFLAGS }-DLLDB_ENABLE_SWIFT_SUPPORT=OFF" \
         ./build-cross-tools.sh "$NATIVE" "$WINDOWS_PREFIX" "$WINDOWS_ARCH" \
         --no-llvm-tool-reuse "$@"
 else
